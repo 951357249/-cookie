@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<style type="text/css">
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			
+			.cartList {
+				width: 1205px;
+			}
+			
+			ul {
+				list-style: none;
+			}
+			
+			.cartHead {
+				border: 1px solid black;
+				height: 50px;
+			}
+			
+			.cartHead li {
+				width: 200px;
+				height: 50px;
+				float: left;
+				font: 32px/50px "楷体";
+				text-align: center;
+			}
+			
+			.goodInfo {
+				border: 1px solid black;
+				border-top: none;
+				height: 50px;
+			}
+			
+			.goodInfo li {
+				float: left;
+				width: 200px;
+				height: 50px;
+				float: left;
+				font: 24px/50px "";
+				text-align: center;
+			}
+			
+			.goodInfo li input {
+				width: 30px;
+				text-align: center;
+			}
+			
+			.goodInfo li.num a {
+				display: inline-block;
+				width: 10px;
+				height: 20px;
+				font: 12px/20px "";
+				background: #ddd;
+				text-decoration: none;
+			}
+			
+			.goodInfo li img {
+				width: 40px;
+				height: 40px;
+				margin-top: 5px;
+				text-align: center;
+			}
+			
+			.blank {
+				height: 50px;
+				font: 32px/50px "";
+				text-align: center;
+				border: 1px solid black;
+				border-top: none;
+				display: none;
+			}
+		</style>
+		<script type="text/javascript" src="js/jquery-1.11.3.js"></script>
+		<script type="text/javascript" src="js/jquery.cookie.js"></script>
+	</head>
+
+	<body>
+		<div class="cartList">
+			<ul class="cartHead">
+				<li>缩略图</li>
+				<li>品名</li>
+				<li>单价</li>
+				<li>数量</li>
+				<li>小计</li>
+				<li>操作</li>
+			</ul>
+			<!-- <ul class="goodInfo" data-good-id="sp1">
+				<li><img src="img/1.jpg" /></li>
+				<li>测试</li>
+				<li>30</li>
+				<li class="num">
+					<a href="javascript:;" class="minus">-</a>
+					<input type="text" name="" id="" value="2" />
+					<a href="javascript:;" class="plus">+</a>
+				</li>
+				<li class="total">60</li>
+				<li><a href="javascript:;" class="del">删除</a></li>
+			</ul> -->
+			<div class="blank">
+				您的购物车空空如也~~
+			</div>
+		</div>
+		<script type="text/javascript">
+			$(function(){
+				var cookieStr = $.cookie('cart') ? $.cookie('cart') : '';
+				if(!cookieStr){
+					$('.blank').css('display','block');
+				}else{
+					//遍历布局
+					var cookieObj = convertCookieStrToCookieObj(cookieStr);
+					for(var key in cookieObj){
+						var good = cookieObj[key];
+						var str = `
+							<ul class="goodInfo" data-good-id="${good.id}">
+								<li><img src="${good.src}" /></li>
+								<li>${good.name}</li>
+								<li>${good.price}</li>
+								<li class="num">
+									<a href="javascript:;" class="minus">-</a>
+									<input type="text" name="" id="" value="${good.num}" />
+									<a href="javascript:;" class="plus">+</a>
+								</li>
+								<li class="total">${good.price * good.num}</li>
+								<li><a href="javascript:;" class="del">删除</a></li>
+							</ul>
+						`;
+						$('.cartList').append(str);
+					}
+					//添加事件
+					//删除
+					var $del = $('.goodInfo .del');
+					$del.each(function(){
+						$(this).click(function(){
+							var id = $(this).parents('.goodInfo').remove().attr('data-good-id');
+							//删除cookie中指定key
+							delete cookieObj[id];
+							$.cookie('cart',JSON.stringify(cookieObj),{expires:7,path:'/'});
+						})
+					})
+					//减
+					var $minus = $('.goodInfo .minus');
+					$.each($minus,function(){
+						$(this).click(function(){
+							//获取id
+							var id = $(this).parents('.goodInfo').attr('data-good-id');
+							//修改cookieObj
+							if(cookieObj[id].num > 1){
+								cookieObj[id].num --;
+							}
+							//添加cookie
+							$.cookie('cart',JSON.stringify(cookieObj),{expires:7,path:'/'});
+							//文本框中的数量
+							$(this).next().val(cookieObj[id].num);
+							$(this).parent().next().html(cookieObj[id].price * cookieObj[id].num);
+						})
+					})
+					//加
+					var $plus = $('.goodInfo .plus');
+					$.each($plus,function(){
+						$(this).click(function(){
+							//获取id
+							var id = $(this).parents('.goodInfo').attr('data-good-id');
+							//修改cookieObj
+							
+							cookieObj[id].num ++;
+							
+							//添加cookie
+							$.cookie('cart',JSON.stringify(cookieObj),{expires:7,path:'/'});
+							//文本框中的数量
+							$(this).prev().val(cookieObj[id].num);
+							$(this).parent().next().html(cookieObj[id].price * cookieObj[id].num);
+						})
+					})
+					//失焦
+					var $input = $('.goodInfo .num input');
+					$input.each(function(){
+						$(this).blur(function(){
+							//获取id
+							var id = $(this).parents('.goodInfo').attr('data-good-id');
+							//修改cookieObj
+							var num = $(this).val();
+							if(/^\d+$/.test(num) &&  num > 1){
+								cookieObj[id].num = $(this).val();
+							}else{
+								cookieObj[id].num = 100;
+							}
+							//添加cookie
+							$.cookie('cart',JSON.stringify(cookieObj),{expires:7,path:'/'});
+							$(this).val(cookieObj[id].num);
+							$(this).parent().next().html(cookieObj[id].price * cookieObj[id].num);
+						})
+					})
+				}
+			})
+			
+			
+			function convertCookieStrToCookieObj(str){
+				if(!str){
+					return {};
+				}
+				return JSON.parse(str);
+			}
+		</script>
+	</body>
+
+</html>

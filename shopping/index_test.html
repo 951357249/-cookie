@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<style type="text/css">
+			.goodList img{
+				width: 200px;
+				height: 300px;
+			}
+			.goodInfo{
+				display: inline-block;
+				width: 200px;
+			}
+			#buy{
+				position: fixed;
+				top: 300px;
+				right: 0px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="goodList">
+			<div class="goodInfo" data-good-id="sp1">
+				<img src="img/1.jpg"/><br />
+				<span>香蕉</span>
+				<span>30RMB</span>
+				<input type="button" name="" id="" value="加入购物车" class="addToCart"/>
+			</div>
+			<div class="goodInfo" data-good-id="sp2">
+				<img src="img/2.jpg"/><br />
+				<span>苹果</span>
+				<span>40RMB</span>
+				<input type="button" name="" id="" value="加入购物车" class="addToCart"/>
+			</div>
+			<div class="goodInfo" data-good-id="sp3">
+				<img src="img/3.jpg"/><br />
+				<span>梨</span>
+				<span>50RMB</span>
+				<input type="button" name="" id="" value="加入购物车" class="addToCart"/>
+			</div>
+		</div>
+		<input type="button" value="购物车(0)" id="buy"/>
+		
+		<script type="text/javascript" src="js/jquery-1.11.3.js" ></script>
+		<script type="text/javascript" src="js/jquery.cookie.js" ></script>
+		<script type="text/javascript" src="js/jquery.fly.js" ></script>
+		<script type="text/javascript" src="js/requestAnimationFrame.js" ></script>
+		<script type="text/javascript">
+			$(function(){
+				init();
+				//获取购物车按钮并添加点击事件,实现跳转
+				$('#buy').click(function(){
+					location.href='buy_test.html';
+				});
+				
+				//获取所有购买按钮
+				$('.goodList .addToCart').click(function(event){
+					//获取商品Id
+					let goodId = $(this).parent().attr('data-good-id');
+					//获取商品名称
+					let goodName = $(this).siblings('span').eq(0).html();
+					//获取商品单价
+					let goodPrice = parseInt($(this).prev().html());
+					//获取图片src
+					let goodSrc = $(this).siblings('img').attr('src');
+					
+					/*
+						'{
+							"sp1" : {
+								"id" : "sp1",
+								"name" : "苹果"，
+								"price" : 99，
+								"src" : "img/1.jpg",
+								"num" : 1
+							},
+							"sp2" : {
+								"id" : "sp2",
+								"name" : "苹果"，
+								"price" : 99，
+								"src" : "img/1.jpg",
+								"num" : 1
+							}
+						}'
+					*/
+					//获取现有的cookie
+				    var cookieStr = $.cookie('cart') ? $.cookie('cart') : '';
+					//转为对象
+					var cookieObj = convertCookieStrToCookieObj(cookieStr);
+					//判断cookie对象中是否有当前购买的商品
+					if(goodId in cookieObj){
+						cookieObj[goodId].num ++; //如果有,当前商品数量 + 1
+					}else{
+						//没有,将当前商品添加到对象中
+						cookieObj[goodId] = {
+							"id" : goodId,
+							"name" : goodName,
+							"price" : goodPrice,
+							"src" : goodSrc,
+							"num" : 1
+						}
+					}
+					//重新加入cookie
+					$.cookie('cart',JSON.stringify(cookieObj),{expires : 7,path : '/'});
+					
+					var $img = $(this).siblings('img').clone().css({width : 80,height:80});
+					$img.fly({
+						start: {
+							left: event.pageX,
+							top: event.pageY
+						},
+						end: {
+							left: $('#buy').offset().left,
+							top: $('#buy').offset().top,
+							width: 0,
+							height: 0,
+						},
+						onEnd:function(){
+							var num = /(\d+)/.exec($('#buy').val())[1];
+							num ++;
+							$('#buy').val('购物车(' + num + ')');
+						}	
+					});
+
+				})
+			})
+			//将cookie字符串转为cookie对象
+			function convertCookieStrToCookieObj(str){
+				if(!str){
+					return {};
+				}
+				return JSON.parse(str);
+			}
+			//初始化购物车数量
+			function init(){
+				var cookieStr = $.cookie('cart') ? $.cookie('cart') : '';
+				var cookieObj = convertCookieStrToCookieObj(cookieStr);
+				var num = 0;
+				for(var key in cookieObj){
+					var value = cookieObj[key];
+					num += value.num;
+				}
+				$('#buy').val('购物车(' + num + ')')
+			}
+		</script>
+	</body>
+</html>
